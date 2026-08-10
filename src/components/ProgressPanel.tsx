@@ -1,9 +1,10 @@
 type Props = {
   label: string;
-  detail?: string;
+  detail?: string | undefined;
   value: number;
   total: number;
 };
+
 
 export function ProgressPanel({ label, detail, value, total }: Props) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
