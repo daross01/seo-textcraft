@@ -77,19 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "author", content: "Wallcraft Studio" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -114,13 +112,47 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function Header() {
+  const linkClass =
+    "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
+  const activeClass = "bg-secondary text-foreground";
+  return (
+    <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="btn-accent flex size-7 items-center justify-center rounded-md text-xs font-bold">
+            W
+          </span>
+          <span className="text-sm font-bold tracking-tight">Wallcraft Studio</span>
+        </Link>
+        <nav className="flex items-center gap-1">
+          <Link to="/" className={linkClass} activeProps={{ className: `${linkClass} ${activeClass}` }}>
+            Wallpaper CSV
+          </Link>
+          <Link
+            to="/pinterest"
+            className={linkClass}
+            activeProps={{ className: `${linkClass} ${activeClass}` }}
+          >
+            Pinterest
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background">
+        <Header />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </div>
     </QueryClientProvider>
   );
 }
+

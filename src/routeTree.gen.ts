@@ -10,33 +10,89 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PinterestRouteImport } from './routes/pinterest'
+import { Route as ApiAnalyzeImageRouteImport } from './routes/api/analyze-image'
+import { Route as ApiGenerateCollectionRouteImport } from './routes/api/generate-collection'
+import { Route as ApiGeneratePinterestRouteImport } from './routes/api/generate-pinterest'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PinterestRoute = PinterestRouteImport.update({
+  id: '/pinterest',
+  path: '/pinterest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAnalyzeImageRoute = ApiAnalyzeImageRouteImport.update({
+  id: '/api/analyze-image',
+  path: '/api/analyze-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGenerateCollectionRoute = ApiGenerateCollectionRouteImport.update({
+  id: '/api/generate-collection',
+  path: '/api/generate-collection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeneratePinterestRoute = ApiGeneratePinterestRouteImport.update({
+  id: '/api/generate-pinterest',
+  path: '/api/generate-pinterest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pinterest': typeof PinterestRoute
+  '/api/analyze-image': typeof ApiAnalyzeImageRoute
+  '/api/generate-collection': typeof ApiGenerateCollectionRoute
+  '/api/generate-pinterest': typeof ApiGeneratePinterestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pinterest': typeof PinterestRoute
+  '/api/analyze-image': typeof ApiAnalyzeImageRoute
+  '/api/generate-collection': typeof ApiGenerateCollectionRoute
+  '/api/generate-pinterest': typeof ApiGeneratePinterestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pinterest': typeof PinterestRoute
+  '/api/analyze-image': typeof ApiAnalyzeImageRoute
+  '/api/generate-collection': typeof ApiGenerateCollectionRoute
+  '/api/generate-pinterest': typeof ApiGeneratePinterestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/pinterest'
+    | '/api/analyze-image'
+    | '/api/generate-collection'
+    | '/api/generate-pinterest'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/pinterest'
+    | '/api/analyze-image'
+    | '/api/generate-collection'
+    | '/api/generate-pinterest'
+  id:
+    | '__root__'
+    | '/'
+    | '/pinterest'
+    | '/api/analyze-image'
+    | '/api/generate-collection'
+    | '/api/generate-pinterest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PinterestRoute: typeof PinterestRoute
+  ApiAnalyzeImageRoute: typeof ApiAnalyzeImageRoute
+  ApiGenerateCollectionRoute: typeof ApiGenerateCollectionRoute
+  ApiGeneratePinterestRoute: typeof ApiGeneratePinterestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +104,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pinterest': {
+      id: '/pinterest'
+      path: '/pinterest'
+      fullPath: '/pinterest'
+      preLoaderRoute: typeof PinterestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/analyze-image': {
+      id: '/api/analyze-image'
+      path: '/api/analyze-image'
+      fullPath: '/api/analyze-image'
+      preLoaderRoute: typeof ApiAnalyzeImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-collection': {
+      id: '/api/generate-collection'
+      path: '/api/generate-collection'
+      fullPath: '/api/generate-collection'
+      preLoaderRoute: typeof ApiGenerateCollectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-pinterest': {
+      id: '/api/generate-pinterest'
+      path: '/api/generate-pinterest'
+      fullPath: '/api/generate-pinterest'
+      preLoaderRoute: typeof ApiGeneratePinterestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PinterestRoute: PinterestRoute,
+  ApiAnalyzeImageRoute: ApiAnalyzeImageRoute,
+  ApiGenerateCollectionRoute: ApiGenerateCollectionRoute,
+  ApiGeneratePinterestRoute: ApiGeneratePinterestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
