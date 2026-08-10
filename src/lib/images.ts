@@ -57,6 +57,7 @@ export async function loadWallpapers(fileList: FileList | File[]): Promise<{
 /* ---- shared store so both tools can reuse the same folder ---- */
 
 let current: Wallpaper[] = [];
+const empty: Wallpaper[] = [];
 const listeners = new Set<() => void>();
 
 export function setSharedWallpapers(images: Wallpaper[]) {
@@ -71,6 +72,7 @@ export function useSharedWallpapers() {
       return () => listeners.delete(l);
     },
     () => current,
-    () => [] as Wallpaper[],
+    () => empty,
   );
 }
+
