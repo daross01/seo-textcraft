@@ -130,6 +130,13 @@ function Header() {
           <Link to="/" className={linkClass} activeProps={{ className: `${linkClass} ${activeClass}` }}>
             PostText Generator
           </Link>
+          <Link
+            to="/pinterest"
+            className={linkClass}
+            activeProps={{ className: `${linkClass} ${activeClass}` }}
+          >
+            PinText Generator
+          </Link>
         </nav>
       </div>
     </header>
