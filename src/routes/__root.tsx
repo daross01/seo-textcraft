@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "author", content: "Wallcraft Studio" },
+      { name: "author", content: "TextCraft Generator" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -124,18 +124,18 @@ function Header() {
           <span className="flex size-7 items-center justify-center rounded-full bg-white text-[oklch(0.75_0.12_25)]">
             <Heart className="size-4 fill-current" />
           </span>
-          <span className="text-sm font-bold tracking-tight">Wallcraft Studio</span>
+          <span className="text-sm font-bold tracking-tight">TextCraft Generator</span>
         </Link>
         <nav className="flex items-center gap-1">
           <Link to="/" className={linkClass} activeProps={{ className: `${linkClass} ${activeClass}` }}>
-            Wallpaper CSV
+            PostText Generator
           </Link>
           <Link
             to="/pinterest"
             className={linkClass}
             activeProps={{ className: `${linkClass} ${activeClass}` }}
           >
-            Pinterest
+            PinText Generator
           </Link>
         </nav>
       </div>
