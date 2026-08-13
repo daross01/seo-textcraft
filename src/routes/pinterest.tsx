@@ -69,7 +69,6 @@ function PinterestPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-5 py-10">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">PinText Generator</p>
         <h1 className="text-3xl font-extrabold tracking-tight">PinText Generator</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
           One title and one description for the entire collection — never per image. Reuses the folder
