@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Heart } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -120,8 +121,8 @@ function Header() {
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
         <Link to="/" className="flex items-center gap-2">
-          <span className="btn-accent flex size-7 items-center justify-center rounded-md text-xs font-bold">
-            W
+          <span className="flex size-7 items-center justify-center rounded-full bg-white text-[oklch(0.75_0.12_25)]">
+            <Heart className="size-4 fill-current" />
           </span>
           <span className="text-sm font-bold tracking-tight">Wallcraft Studio</span>
         </Link>
