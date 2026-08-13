@@ -9,16 +9,16 @@ import { analyzeAll, api } from "@/lib/analyze";
 export const Route = createFileRoute("/pinterest")({
   head: () => ({
     meta: [
-      { title: "Pinterest Collection Generator | Wallcraft Studio" },
+      { title: "PinText Generator | TextCraft Generator" },
       {
         name: "description",
         content:
-          "Generate one Pinterest title and description for a whole wallpaper collection, written from real visual analysis of your images.",
+          "Generate one PinText title and description for a whole wallpaper collection, written from real visual analysis of your images.",
       },
-      { property: "og:title", content: "Pinterest Collection Generator" },
+      { property: "og:title", content: "PinText Generator" },
       {
         property: "og:description",
-        content: "One title, one description, tuned for Pinterest — from your wallpaper folder.",
+        content: "One title, one description, tuned for PinText — from your wallpaper folder.",
       },
     ],
   }),
@@ -69,8 +69,8 @@ function PinterestPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-5 py-10">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">Tool B</p>
-        <h1 className="text-3xl font-extrabold tracking-tight">Pinterest Collection Generator</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-accent">PinText Generator</p>
+        <h1 className="text-3xl font-extrabold tracking-tight">PinText Generator</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
           One title and one description for the entire collection — never per image. Reuses the folder
           you already loaded, or upload a new one.
@@ -92,7 +92,7 @@ function PinterestPage() {
             className="btn-accent inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Sparkles className="size-4" />
-            {busy ? "Working…" : "Generate Pinterest Content"}
+            {busy ? "Working…" : "Generate PinText Content"}
           </button>
           {result && (
             <button
@@ -108,7 +108,7 @@ function PinterestPage() {
 
       {busy && (
         <ProgressPanel
-          label={phase === "analyzing" ? "Analyzing your collection" : "Writing Pinterest content"}
+          label={phase === "analyzing" ? "Analyzing your collection" : "Writing PinText content"}
           detail={
             phase === "analyzing" ? `Analyzing image ${progress.current}…` : "Finding the common thread…"
           }
@@ -127,7 +127,7 @@ function PinterestPage() {
         <section className="grid gap-5 lg:grid-cols-2">
           <article className="surface-card space-y-3 p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Pinterest Title
+              PinText Title
             </h2>
             <p className="text-lg font-semibold leading-snug">{result.title}</p>
             <button
@@ -139,7 +139,7 @@ function PinterestPage() {
           </article>
           <article className="surface-card space-y-3 p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Pinterest Description
+              PinText Description
             </h2>
             <p className="leading-relaxed">{result.description}</p>
             {result.keywords && result.keywords.length > 0 && (
