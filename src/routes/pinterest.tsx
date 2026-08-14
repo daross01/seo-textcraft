@@ -9,7 +9,7 @@ import { analyzeAll, api } from "@/lib/analyze";
 export const Route = createFileRoute("/pinterest")({
   head: () => ({
     meta: [
-      { title: "PinText Generator | TextCraft Generator" },
+      { title: "PinText Generator | SEO TextCraft" },
       {
         name: "description",
         content:

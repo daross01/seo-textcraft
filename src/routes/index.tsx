@@ -10,7 +10,7 @@ import { buildRows, downloadCsv, type CollectionContent, type CsvRow } from "@/l
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BlogText Generator | TextCraft Generator" },
+      { title: "BlogText Generator | SEO TextCraft" },
       {
         name: "description",
         content:
