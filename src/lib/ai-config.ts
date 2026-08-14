@@ -27,33 +27,8 @@ Hard rules:
 - No emojis, no hashtags (except where explicitly requested), no markdown.
 `.trim();
 
-/**
- * Content modes. Only the current (provisional) mode is defined for now;
- * the next step will add the remaining modes here — prompts stay centralised.
- */
-export const CONTENT_MODES = {
-  wallpapers: {
-    id: "wallpapers",
-    label: "Wallpapers",
-    subject: "wallpapers",
-  },
-} as const;
-
-export type ContentMode = keyof typeof CONTENT_MODES;
-export const DEFAULT_MODE: ContentMode = "wallpapers";
-
-export function isContentMode(value: unknown): value is ContentMode {
-  return typeof value === "string" && value in CONTENT_MODES;
-}
-
-export function normalizeMode(value: unknown): ContentMode {
-  return isContentMode(value) ? value : DEFAULT_MODE;
-}
-
-export function analysisPrompt(mode: ContentMode = DEFAULT_MODE) {
-  const subject = CONTENT_MODES[mode].subject;
-  return `
-You are a visual analyst for a ${subject} website. Analyse the single image provided and return strict JSON only.
+export const ANALYSIS_PROMPT = `
+You are a visual analyst for a wallpapers website. Analyse the single image provided and return strict JSON only.
 
 Return this exact shape:
 {
@@ -74,11 +49,6 @@ Return this exact shape:
 
 Only describe what is observable. Output JSON with no code fences and no commentary.
 `.trim();
-}
-
-/** Kept for backwards compatibility. */
-export const ANALYSIS_PROMPT = analysisPrompt(DEFAULT_MODE);
-
 
 export function collectionPrompt(count: number) {
   return `
