@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Download, RefreshCw, Sparkles, AlertTriangle } from "lucide-react";
 import { UploadPanel } from "@/components/UploadPanel";
 import { ProgressPanel } from "@/components/ProgressPanel";
-import { useSharedWallpapers, type Wallpaper } from "@/lib/images";
+import { ModeSelector } from "@/components/ModeSelector";
+import { setSharedWallpapers, useSharedMode, useSharedWallpapers } from "@/lib/images";
 import { analyzeAll, api } from "@/lib/analyze";
 import { buildRows, downloadCsv, type CollectionContent, type CsvRow } from "@/lib/csv";
 
@@ -29,8 +30,9 @@ export const Route = createFileRoute("/")({
 type Phase = "idle" | "analyzing" | "collection" | "done";
 
 function WallpaperCsvPage() {
-  const shared = useSharedWallpapers();
-  const [images, setImages] = useState<Wallpaper[]>(shared);
+  // Single source of truth: the shared collection (images + mode + analyses).
+  const images = useSharedWallpapers();
+  const mode = useSharedMode();
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState({ value: 0, current: 0 });
   const [rows, setRows] = useState<CsvRow[] | null>(null);
@@ -47,14 +49,16 @@ function WallpaperCsvPage() {
     setPhase("analyzing");
     setProgress({ value: 0, current: 0 });
     try {
-      const { analyses, failed } = await analyzeAll(images, (done, current) =>
-        setProgress({ value: done, current }),
+      const { analyses, failed } = await analyzeAll(
+        images,
+        (done, current) => setProgress({ value: done, current }),
+        mode,
       );
       setWarnings(failed);
       setPhase("collection");
       const { content } = await api.postJson<{ content: CollectionContent }>(
         "/api/generate-collection",
-        { analyses },
+        { analyses, mode },
       );
       setRows(buildRows(content, images.length));
       setPhase("done");
@@ -64,23 +68,27 @@ function WallpaperCsvPage() {
     }
   }
 
-  const detail = useMemo(() => {
-    if (phase === "analyzing") return `Analyzing image ${progress.current}…`;
-    if (phase === "collection") return "Generating collection content and individual descriptions…";
-    return undefined;
-  }, [phase, progress.current]);
+  const detail =
+    phase === "analyzing"
+      ? `Analyzing image ${progress.current}…`
+      : phase === "collection"
+        ? "Generating collection content and individual descriptions…"
+        : undefined;
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-5 py-10">
       <header className="space-y-2">
         <h1 className="text-3xl font-extrabold tracking-tight">BlogText Generator</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Drop a folder of wallpapers. Every image is analysed visually, then written up as editorial
-          copy and exported as a two-column <code className="rounded bg-secondary px-1">key,text</code> CSV.
+          Drop a folder of wallpapers. Every image is analysed visually, then written up as
+          editorial copy and exported as a two-column{" "}
+          <code className="rounded bg-secondary px-1">key,text</code> CSV.
         </p>
       </header>
 
-      <UploadPanel images={images} onChange={setImages} disabled={busy} />
+      <ModeSelector disabled={busy} />
+
+      <UploadPanel images={images} onChange={setSharedWallpapers} disabled={busy} />
 
       {images.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">
@@ -106,7 +114,9 @@ function WallpaperCsvPage() {
 
       {busy && (
         <ProgressPanel
-          label={phase === "analyzing" ? "Analyzing your wallpapers" : "Generating collection content"}
+          label={
+            phase === "analyzing" ? "Analyzing your wallpapers" : "Generating collection content"
+          }
           detail={detail}
           value={phase === "analyzing" ? progress.value : images.length}
           total={images.length}
@@ -136,7 +146,8 @@ function WallpaperCsvPage() {
             <div>
               <h2 className="font-semibold">Your CSV is ready</h2>
               <p className="text-sm text-muted-foreground">
-                {rows.length} rows — image_1 to image_{images.length}. Text is editable before download.
+                {rows.length} rows — image_1 to image_{images.length}. Text is editable before
+                download.
               </p>
             </div>
             <button

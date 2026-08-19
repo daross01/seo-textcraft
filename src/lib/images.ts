@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import { DEFAULT_MODE, normalizeMode, type ModeId } from "@/lib/ai-config";
+import { pruneAnalyses } from "@/lib/analysis-store";
 
 export type Wallpaper = {
   id: string;
@@ -37,9 +39,7 @@ export async function loadWallpapers(fileList: FileList | File[]): Promise<{
 }> {
   const all = Array.from(fileList);
   const skipped = all.filter((f) => !isSupported(f)).map((f) => f.name);
-  const files = all
-    .filter(isSupported)
-    .sort((a, b) => collator.compare(a.name, b.name));
+  const files = all.filter(isSupported).sort((a, b) => collator.compare(a.name, b.name));
 
   const images: Wallpaper[] = [];
   for (const file of files) {
@@ -54,25 +54,48 @@ export async function loadWallpapers(fileList: FileList | File[]): Promise<{
   return { images, skipped };
 }
 
-/* ---- shared store so both tools can reuse the same folder ---- */
+/* ---- shared collection state so both tools reuse folder + mode + analyses ---- */
 
 let current: Wallpaper[] = [];
 const empty: Wallpaper[] = [];
+let mode: ModeId = DEFAULT_MODE;
 const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
 
 export function setSharedWallpapers(images: Wallpaper[]) {
   current = images;
-  listeners.forEach((l) => l());
+  // Analyses of images that are no longer loaded are useless; drop them.
+  pruneAnalyses(images.map((i) => i.id));
+  emit();
 }
 
 export function useSharedWallpapers() {
   return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
+    subscribe,
     () => current,
     () => empty,
   );
 }
 
+export function setSharedMode(next: string) {
+  const normalized = normalizeMode(next);
+  if (normalized === mode) return;
+  mode = normalized;
+  emit();
+}
+
+export function useSharedMode() {
+  return useSyncExternalStore(
+    subscribe,
+    () => mode,
+    () => DEFAULT_MODE,
+  );
+}

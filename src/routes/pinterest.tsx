@@ -3,8 +3,10 @@ import { useState } from "react";
 import { AlertTriangle, Check, Copy, RefreshCw, Sparkles } from "lucide-react";
 import { UploadPanel } from "@/components/UploadPanel";
 import { ProgressPanel } from "@/components/ProgressPanel";
-import { useSharedWallpapers, type Wallpaper } from "@/lib/images";
+import { ModeSelector } from "@/components/ModeSelector";
+import { setSharedWallpapers, useSharedMode, useSharedWallpapers } from "@/lib/images";
 import { analyzeAll, api } from "@/lib/analyze";
+import { PINTEREST_LIMITS } from "@/lib/pinterest-content";
 
 export const Route = createFileRoute("/pinterest")({
   head: () => ({
@@ -25,15 +27,17 @@ export const Route = createFileRoute("/pinterest")({
   component: PinterestPage,
 });
 
-type Result = { title: string; description: string; keywords?: string[] };
+type Result = { title: string; description: string; keywords?: string[]; primary_keyword?: string };
 
 function PinterestPage() {
-  const shared = useSharedWallpapers();
-  const [images, setImages] = useState<Wallpaper[]>(shared);
+  // Single source of truth: the shared collection (images + mode + analyses).
+  const images = useSharedWallpapers();
+  const mode = useSharedMode();
   const [phase, setPhase] = useState<"idle" | "analyzing" | "writing">("idle");
   const [progress, setProgress] = useState({ value: 0, current: 0 });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
 
   const busy = phase !== "idle";
@@ -41,16 +45,21 @@ function PinterestPage() {
   async function generate() {
     if (images.length === 0) return;
     setError(null);
+    setWarnings([]);
     setResult(null);
     setPhase("analyzing");
     setProgress({ value: 0, current: 0 });
     try {
-      const { analyses } = await analyzeAll(images, (done, current) =>
-        setProgress({ value: done, current }),
+      const { analyses, failed } = await analyzeAll(
+        images,
+        (done, current) => setProgress({ value: done, current }),
+        mode,
       );
+      setWarnings(failed);
       setPhase("writing");
       const { content } = await api.postJson<{ content: Result }>("/api/generate-pinterest", {
         analyses,
+        mode,
       });
       setResult(content);
       setPhase("idle");
@@ -71,14 +80,16 @@ function PinterestPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-extrabold tracking-tight">PinText Generator</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          One title and one description for the entire collection — never per image. Reuses the folder
-          you already loaded, or upload a new one.
+          One title and one description for the entire collection — never per image. Reuses the
+          folder you already loaded, or upload a new one.
         </p>
       </header>
 
+      <ModeSelector disabled={busy} />
+
       <UploadPanel
         images={images}
-        onChange={setImages}
+        onChange={setSharedWallpapers}
         title="Upload your wallpaper collection"
         disabled={busy}
       />
@@ -109,7 +120,9 @@ function PinterestPage() {
         <ProgressPanel
           label={phase === "analyzing" ? "Analyzing your collection" : "Writing PinText content"}
           detail={
-            phase === "analyzing" ? `Analyzing image ${progress.current}…` : "Finding the common thread…"
+            phase === "analyzing"
+              ? `Analyzing image ${progress.current}…`
+              : "Finding the common thread…"
           }
           value={phase === "analyzing" ? progress.value : images.length}
           total={images.length}
@@ -122,6 +135,17 @@ function PinterestPage() {
         </p>
       )}
 
+      {warnings.length > 0 && (
+        <div className="rounded-lg border border-border bg-secondary px-4 py-3 text-sm text-muted-foreground">
+          <p className="mb-1 font-medium text-foreground">Some images could not be analysed:</p>
+          <ul className="list-inside list-disc">
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {result && (
         <section className="grid gap-5 lg:grid-cols-2">
           <article className="surface-card space-y-3 p-6">
@@ -129,11 +153,16 @@ function PinterestPage() {
               PinText Title
             </h2>
             <p className="text-lg font-semibold leading-snug">{result.title}</p>
+            <p className="text-xs text-muted-foreground">
+              {result.title.length}/{PINTEREST_LIMITS.title} characters
+              {result.primary_keyword ? ` · main keyword: ${result.primary_keyword}` : ""}
+            </p>
             <button
               onClick={() => copy("title", result.title)}
               className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
             >
-              {copied === "title" ? <Check className="size-4" /> : <Copy className="size-4" />} Copy Title
+              {copied === "title" ? <Check className="size-4" /> : <Copy className="size-4" />} Copy
+              Title
             </button>
           </article>
           <article className="surface-card space-y-3 p-6">
@@ -142,20 +171,40 @@ function PinterestPage() {
             </h2>
             <p className="leading-relaxed">{result.description}</p>
             {result.keywords && result.keywords.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {result.keywords.map((k) => (
-                  <span key={k} className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
-                    {k}
-                  </span>
-                ))}
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {result.keywords.map((k) => (
+                    <span
+                      key={k}
+                      className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground"
+                    >
+                      {k}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => copy("keywords", result.keywords!.join(", "))}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
+                >
+                  {copied === "keywords" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}{" "}
+                  Copy Keywords
+                </button>
               </div>
             )}
             <button
               onClick={() => copy("description", result.description)}
               className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
             >
-              {copied === "description" ? <Check className="size-4" /> : <Copy className="size-4" />} Copy
-              Description
+              {copied === "description" ? (
+                <Check className="size-4" />
+              ) : (
+                <Copy className="size-4" />
+              )}{" "}
+              Copy Description
             </button>
           </article>
         </section>
