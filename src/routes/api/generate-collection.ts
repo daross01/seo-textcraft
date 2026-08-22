@@ -3,6 +3,7 @@ import { AI_CONFIG, collectionPrompt, normalizeMode } from "@/lib/ai-config";
 import { chatJson, errorResponse, GatewayError, type ChatMessage } from "@/lib/gateway.server";
 import { SEO_LIMITS, shortenGracefully, withinLimit } from "@/lib/seo-limits";
 import type { CollectionContent } from "@/lib/csv";
+import { deriveShortTitle } from "@/lib/pinterest-content";
 
 type SeoPair = { seo_title: string; seo_description: string };
 
@@ -75,7 +76,13 @@ export const Route = createFileRoute("/api/generate-collection")({
               `Incomplete generation: expected ${analyses.length} image texts, got ${content?.images?.length ?? 0}. Try again.`,
             );
           }
-          return Response.json({ content: await enforceSeoLimits(content) });
+          const withLimits = await enforceSeoLimits(content);
+          const card_title =
+            (withLimits.card_title ?? "").trim().length > 0 &&
+            withLimits.card_title.length <= AI_CONFIG.cardTitleMaxChars
+              ? withLimits.card_title.trim()
+              : deriveShortTitle(withLimits.card_title || withLimits.title || "", AI_CONFIG.cardTitleMaxChars);
+          return Response.json({ content: { ...withLimits, card_title } });
         } catch (error) {
           return errorResponse(error);
         }

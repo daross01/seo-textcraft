@@ -3,6 +3,8 @@ import { AI_CONFIG } from "@/lib/ai-config";
 
 export const PINTEREST_LIMITS = {
   title: AI_CONFIG.pinterestTitleMaxChars,
+  boardTitle: AI_CONFIG.pinterestBoardTitleMaxChars,
+  boardDescription: AI_CONFIG.pinterestBoardDescriptionMaxChars,
 };
 
 /** Raw shape expected from the model. */
@@ -12,6 +14,8 @@ export const pinterestRawSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   keywords: z.array(z.string()).optional().default([]),
+  board_title: z.string().optional().default(""),
+  board_description: z.string().optional().default(""),
 });
 
 export type PinterestRaw = z.infer<typeof pinterestRawSchema>;
@@ -73,4 +77,30 @@ export function shortenTitle(title: string, keyword: string, max = PINTEREST_LIM
     built = next;
   }
   return built.replace(/[\s,;:–—-]+$/, "").trim();
+}
+/** Word-safe shortening for any field with a hard character limit. */
+export function clampText(value: string, max: number) {
+  const clean = sanitizeText(value);
+  if (clean.length <= max) return clean;
+  const words = clean.split(" ");
+  let built = "";
+  for (const word of words) {
+    const next = built ? `${built} ${word}` : word;
+    if (next.length > max) break;
+    built = next;
+  }
+  return built.replace(/[\s,;:–—-]+$/, "").trim();
+}
+
+const FILLER = /\b(ideas?|inspiration|collection|aesthetic ideas|for you|best|top|cute)\b/gi;
+
+/** Fallback short title derived from the Pinterest title (no number, no filler). */
+export function deriveShortTitle(title: string, max: number) {
+  const base = sanitizeText(title)
+    .replace(/^\d+\s+/, "")
+    .replace(/\bin\s+/i, "")
+    .replace(FILLER, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return clampText(base, max);
 }

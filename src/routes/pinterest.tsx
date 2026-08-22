@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertTriangle, Check, Copy, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, Copy, Download, RefreshCw, Sparkles } from "lucide-react";
 import { UploadPanel } from "@/components/UploadPanel";
 import { ProgressPanel } from "@/components/ProgressPanel";
 import { ModeSelector } from "@/components/ModeSelector";
 import { setSharedWallpapers, useSharedMode, useSharedWallpapers } from "@/lib/images";
 import { analyzeAll, api } from "@/lib/analyze";
 import { PINTEREST_LIMITS } from "@/lib/pinterest-content";
+import { downloadCsvTable } from "@/lib/csv";
 
 export const Route = createFileRoute("/pinterest")({
   head: () => ({
@@ -15,19 +16,45 @@ export const Route = createFileRoute("/pinterest")({
       {
         name: "description",
         content:
-          "Generate one PinText title and description for a whole wallpaper collection, written from real visual analysis of your images.",
+          "Generate a complete set of Pinterest copy for a wallpaper collection from real visual analysis: PinText title, description and keywords, plus Board Title and Board Description, exportable as CSV.",
       },
       { property: "og:title", content: "PinText Generator" },
       {
         property: "og:description",
-        content: "One title, one description, tuned for PinText — from your wallpaper folder.",
+        content:
+          "PinText title, description, keywords, Board Title and Board Description for your wallpaper folder — all from one visual analysis.",
       },
     ],
   }),
   component: PinterestPage,
 });
 
-type Result = { title: string; description: string; keywords?: string[]; primary_keyword?: string };
+type Result = {
+  title: string;
+  description: string;
+  keywords?: string[];
+  board_title?: string;
+  board_description?: string;
+  primary_keyword?: string;
+};
+
+const CSV_HEADERS = [
+  "PinText Title",
+  "PinText Description",
+  "Keywords",
+  "Board Title",
+  "Board Description",
+];
+
+function resultToCsvRow(result: Result): string[] {
+  return [
+    result.title ?? "",
+    result.description ?? "",
+    (result.keywords ?? []).join(", "),
+    result.board_title ?? "",
+    result.board_description ?? "",
+  ];
+}
 
 function PinterestPage() {
   // Single source of truth: the shared collection (images + mode + analyses).
@@ -80,8 +107,10 @@ function PinterestPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-extrabold tracking-tight">PinText Generator</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          One title and one description for the entire collection — never per image. Reuses the
-          folder you already loaded, or upload a new one.
+          One set of Pinterest copy for the entire collection — never per image. Generates a
+          PinText title, description and keywords plus a Board Title and a Board Description,
+          all ready to export as a CSV. Reuses the folder you already loaded,
+          or upload a new one.
         </p>
       </header>
 
@@ -111,6 +140,17 @@ function PinterestPage() {
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-50"
             >
               <RefreshCw className="size-4" /> Generate Again
+            </button>
+          )}
+          {result && (
+            <button
+              onClick={() =>
+                downloadCsvTable(CSV_HEADERS, [resultToCsvRow(result)], "pintext-content.csv")
+              }
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary disabled:opacity-50"
+            >
+              <Download className="size-4" /> Download CSV
             </button>
           )}
         </div>
@@ -205,6 +245,49 @@ function PinterestPage() {
                 <Copy className="size-4" />
               )}{" "}
               Copy Description
+            </button>
+          </article>
+
+          <article className="surface-card space-y-3 p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Board Title
+            </h2>
+            <p className="text-lg font-semibold leading-snug">{result.board_title}</p>
+            <p className="text-xs text-muted-foreground">
+              {(result.board_title ?? "").length}/{PINTEREST_LIMITS.boardTitle} characters
+            </p>
+            <button
+              onClick={() => copy("board_title", result.board_title ?? "")}
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
+            >
+              {copied === "board_title" ? (
+                <Check className="size-4" />
+              ) : (
+                <Copy className="size-4" />
+              )}{" "}
+              Copy Board Title
+            </button>
+          </article>
+
+          <article className="surface-card space-y-3 p-6 lg:col-span-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Board Description
+            </h2>
+            <p className="leading-relaxed">{result.board_description}</p>
+            <p className="text-xs text-muted-foreground">
+              {(result.board_description ?? "").length}/{PINTEREST_LIMITS.boardDescription}{" "}
+              characters
+            </p>
+            <button
+              onClick={() => copy("board_description", result.board_description ?? "")}
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
+            >
+              {copied === "board_description" ? (
+                <Check className="size-4" />
+              ) : (
+                <Copy className="size-4" />
+              )}{" "}
+              Copy Board Description
             </button>
           </article>
         </section>

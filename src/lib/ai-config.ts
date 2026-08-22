@@ -15,8 +15,11 @@ export const AI_CONFIG = {
   subtitleLength: "one short sentence",
   seoTitleMaxChars: 60,
   seoDescriptionMaxChars: 158,
+  cardTitleMaxChars: 35,
   pinterestTitleMaxChars: 95,
   pinterestDescriptionLength: "45-80 words",
+  pinterestBoardTitleMaxChars: 45,
+  pinterestBoardDescriptionMaxChars: 400,
   concurrency: 4,
 };
 
@@ -297,6 +300,7 @@ First identify the dominant pattern of the collection from the analyses (recurri
 Produce strict JSON only, with this exact shape:
 {
   "title": "short, clear, appealing collection title that reflects the real dominant traits and reads well in search. A list format using the real number ${count} is allowed but not required. Never a fixed template.",
+  "card_title": "A much shorter version of the title for cards: MAX ${AI_CONFIG.cardTitleMaxChars} characters, no number, no filler, Title Case. Keep only the strongest descriptive words plus the content type. Example: title '10 Dreamy Fall Mountain and Twilight Sky Wallpapers' -> 'Dreamy Fall Wallpapers'",
   "subtitle": "${AI_CONFIG.subtitleLength}, complements the title with extra context, never repeats it",
   "intro": "${AI_CONFIG.introLength} framing the collection as a whole from its real shared traits. Do not describe images one by one.",
   "images": [
@@ -329,7 +333,9 @@ Return strict JSON only:
   "angle": "one short phrase naming the dominant pattern you found across the analyses",
   "title": "Pinterest title, MAX ${AI_CONFIG.pinterestTitleMaxChars} characters including spaces. Count the characters.",
   "description": "${AI_CONFIG.pinterestDescriptionLength}, about the whole collection",
-  "keywords": ["6-10 relevant Pinterest keywords"]
+  "keywords": ["6-10 relevant Pinterest keywords"],
+  "board_title": "MAX ${AI_CONFIG.pinterestBoardTitleMaxChars} characters. Short board name, no number. Example: title '26 Glossy 3D Bubble Letter Wallpaper Ideas in Lavender' -> 'Lavender Glossy 3D Bubble Letter Wallpaper'",
+  "board_description": "MAX ${AI_CONFIG.pinterestBoardDescriptionMaxChars} characters. Description for the Pinterest board that will hold these pins: same angle as the description but board-level, mentioning the theme, colours, style and what someone will find saved there."
 }
 
 Output JSON with no code fences and no commentary.
@@ -371,6 +377,16 @@ Description rules:
 Keyword rules:
 - 6-10 lowercase Pinterest search phrases derived from the same angle: theme, visible traits, style, colours, season or occasion when genuinely observable.
 - No hashtags, no near-duplicates of the same phrase, no keywords unsupported by the analyses.
+
+Board title rules:
+- A real board name: theme + traits + content type, no number, no "Ideas", Title Case.
+- MAX ${AI_CONFIG.pinterestBoardTitleMaxChars} characters including spaces. Count them.
+
+Board description rules:
+- Written for the board that will contain these pins, not for a single pin.
+- Same angle and keywords as the description, expanded slightly: what the board collects, real colours, traits, style, mood, and who it suits.
+- MAX ${AI_CONFIG.pinterestBoardDescriptionMaxChars} characters including spaces. No hashtags, no emojis, no filler.
+
 
 Never claim or imply search volume, competition or CTR data — you have no keyword data. Optimise with natural language only.
 Never invent a season, occasion, aesthetic or dominant colour that the analyses do not support. If the set is mixed, keep the angle simple and factual.

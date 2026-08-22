@@ -7,6 +7,9 @@ import {
 } from "@/lib/ai-config";
 import { chatJson, errorResponse, GatewayError } from "@/lib/gateway.server";
 import {
+  PINTEREST_LIMITS,
+  clampText,
+  deriveShortTitle,
   pinterestRawSchema,
   sanitizeKeywords,
   sanitizeText,
@@ -18,6 +21,8 @@ export type PinterestContent = {
   title: string;
   description: string;
   keywords: string[];
+  board_title: string;
+  board_description: string;
   primary_keyword?: string;
 };
 
@@ -81,10 +86,19 @@ export const Route = createFileRoute("/api/generate-pinterest")({
             title = titleWithinLimit(rewritten) ? rewritten : shortenTitle(title, primaryKeyword);
           }
 
+          const boardTitle =
+            clampText(parsed.data.board_title, PINTEREST_LIMITS.boardTitle) ||
+            deriveShortTitle(title, PINTEREST_LIMITS.boardTitle);
+          const boardDescription =
+            clampText(parsed.data.board_description, PINTEREST_LIMITS.boardDescription) ||
+            clampText(description, PINTEREST_LIMITS.boardDescription);
+
           const content: PinterestContent = {
             title,
             description,
             keywords,
+            board_title: boardTitle,
+            board_description: boardDescription,
             ...(primaryKeyword ? { primary_keyword: primaryKeyword } : {}),
           };
           return Response.json({ content });
